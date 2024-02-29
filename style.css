@@ -1,0 +1,36 @@
+#weather-info {
+    font-size: 16px;
+    font-weight: bold;
+    color: #333;
+    background-color: #6e6c6c;
+}
+.paris-info {
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    background-color: #6e6c6c;
+    text-align: center;
+}
+
+.paris-image {
+    width: 200px;
+    height: auto;
+    margin-bottom: 20px;
+}
+.paris-info {
+    font-family: 'Roboto', sans-serif;
+}
+
+
+#weather-info {
+    font-size: 24px; /* Increase font size for weather data */
+    font-weight: bold;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5); /* Add shadow for better visibility */
+}
+.section {
+    margin-top: 50px; /* Add margin to create space between sections */
+    background-color:#6e6c6c; /* Set black background color for sections */
+    padding: 20px; /* Add padding for content within sections */
+    border-radius: 10px; /* Add border radius for rounded corners */
+}

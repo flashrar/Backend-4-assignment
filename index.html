@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="style.css">
     <title>Your Website</title>
 </head>
 <body>
@@ -39,10 +40,82 @@
 </div>
 
 
+<!-- YouTube Player Section -->
+<div class="container section">
+    <div id="player"></div>
+</div>
+
+<!-- Google Maps Section -->
+<div class="container section">
+    <div class="paris-info">
+        <div id="weather-info" class="weather-info"></div>
+    </div>
+</div>
 
 <!-- Bootstrap JS and Popper.js -->
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script src="https://www.youtube.com/iframe_api"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCBAoRMzVl2-PO0-5kn4JDkikS7kkVuUqc&libraries=places" async defer></script>
+<script>
+    let player;
+
+    function initYouTubePlayer(videoId) {
+        player = new YT.Player('player', {
+            height: '390',
+            width: '640',
+            videoId: videoId,
+            events: {
+                'onReady': onPlayerReady,
+                'onStateChange': onPlayerStateChange
+            }
+        });
+    }
+
+    function onPlayerReady(event) {
+        event.target.playVideo();
+    }
+
+    function onPlayerStateChange(event) {
+        if (event.data == YT.PlayerState.ENDED) {
+            player.stopVideo();
+        }
+    }
+
+    function fetchWeatherData() {
+    const apiUrl = `https://api.openweathermap.org/data/2.5/weather?q=Paris&appid=965c3d8856882153b1168286a3ab9b96&units=metric`;
+
+    fetch(apiUrl)
+        .then(response => response.json())
+        .then(data => {
+            const temperature = data.main.temp;
+            const description = data.weather[0].description;
+
+            const weatherInfoElement = document.getElementById('weather-info');
+            weatherInfoElement.innerHTML = `<p>Temperature: ${temperature}°C</p>
+                                            <p>Description: ${description}</p>`;
+        })
+        .catch(error => {
+            console.error('Error fetching weather data:', error);
+        });
+    }
+
+    function initialize() {
+        const tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api";
+        const firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+    }
+
+    window.onYouTubeIframeAPIReady = function() {
+        initYouTubePlayer('h4q9tHf01A0');
+    };
+
+    document.addEventListener('DOMContentLoaded', function () {
+        initialize();
+        fetchWeatherData(); 
+    });
+</script>
 </body>
 </html>
