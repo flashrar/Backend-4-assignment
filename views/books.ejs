@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Books</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">Book List</a>
+    <!-- Add any navigation links if needed -->
+  </div>
+  <div class="collapse navbar-collapse" id="navbarNav">
+    <ul class="navbar-nav">
+      <li class="nav-item">
+        <a class="nav-link " href="index.html">Home</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link " href="admin_usr.html">Go Gack</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="index.html">Sign Out</a>
+      </li>
+    </ul>
+  </div>
+</nav>
+
+<div class="container mt-5">
+  <h2>Book List</h2>
+  <div class="row">
+    <div class="col-md-12">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Year</th>
+            <th>Author</th>
+            <th>Publisher</th>
+            <th>Status</th>
+            <th>Borrowed By</th>
+            <th>Action</th> <!-- Add a new column for actions -->
+          </tr>
+        </thead>
+        <tbody>
+          <% books.forEach((book, index) => { %>
+            <tr>
+              <td><%= index + 1 %></td> <!-- Display PostgreSQL's own ID counting -->
+              <td><%= book.name %></td>
+              <td><%= book.year %></td>
+              <td><%= book.author %></td>
+              <td><%= book.publisher %></td>
+              <td><%= book.status ? 'Borrowed' : 'Available' %></td>
+              <td><%= book.borrowed_by || 'N/A' %></td>
+              <td>
+                <!-- Add the "Borrow" button with appropriate data attributes -->
+                <% if (!book.status) { %>
+                  <button class="btn btn-success borrowButton" data-id="<%= book.id %>">Borrow</button>
+                <% } else { %>
+                  <button class="btn btn-warning unborrowButton" data-id="<%= book.id %>">Unborrow</button>
+                <% } %>
+                <button class="btn btn-primary editButton" data-id="<%= book.id %>">Edit</button>
+                <button class="btn btn-danger deleteButton" data-id="<%= book.id %>">Delete</button>
+                <button class="btn btn-primary viewCommentsButton" data-id="<%= book.id %>" data-bs-toggle="modal" data-bs-target="#commentsModal">View Comments</button>
+              </td>
+              
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="commentsModal" tabindex="-1" aria-labelledby="commentsModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="commentsModalLabel">Comments</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <!-- Display comments here -->
+        <ul class="list-group" id="commentsList">
+          <!-- Each comment item with delete button -->
+          <li class="list-group-item d-flex justify-content-between align-items-center" >
+            <span id="commentContent">Comment Content</span>
+            <!-- Delete button -->
+            <button type="button" class="btn btn-danger btn-sm delete-comment">Delete</button>
+          </li>
+        </ul>
+      </div>
+      <div class="modal-footer">
+        <!-- Form to add a new comment -->
+        <form id="addCommentForm">
+          <div class="mb-5">
+            <textarea class="form-control" id="commentText" rows="3" placeholder="Add a comment"></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary">Add Comment</button>
+        </form>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container mt-3">
+    <div class="row">
+      <div class="col-md-6">
+        <h2>Add New Book</h2>
+        <form id="addBookForm">
+            <div class="row justify-content-left">
+                <div class="col-md-6">
+                  <table class="table">
+                    <tbody>
+                      <tr>
+                        <td><input type="text" class="form-control" name="name" id="bookName" placeholder="Name" required></td>
+                      </tr>
+                      <tr>
+                        <td><input type="number" class="form-control" name="year" placeholder="Year" required></td>
+                      </tr>
+                      <tr>
+                        <td><input type="text" class="form-control" name="author" placeholder="Author" required></td>
+                      </tr>
+                      <tr>
+                        <td><input type="text" class="form-control" name="publisher" placeholder="Publisher" required></td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="status" id="statusCheckbox">
+                            <label class="form-check-label" for="statusCheckbox">Borrowed</label>
+                          </div>
+                        </td>
+                      </tr>
+                      <tr id="borrowedByRow" style="display: none;">
+                        <td><input type="text" class="form-control" name="borrowed_by" id="borrowedBy" placeholder="Borrowed By"></td>
+                      </tr>
+                      <tr>
+                        <td><button type="submit" class="btn btn-primary">Add</button></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+        </form>
+      </div>
+      <!-- Inside the "Edit Book" form -->
+    <div class="col-md-6">
+        <h2>Edit Book</h2>
+        <form id="editBookForm" data-id="">
+        <!-- Add a dropdown menu to select existing books -->
+        
+        <!-- Form fields for editing a book -->
+        <div class="row justify-content-right">
+            <div class="col-md-6">
+            <table class="table">
+              <tbody>
+                <tr>
+                    <td><input type="text" class="form-control" name="editName" id="editBookName" placeholder="Name" required></td>
+                </tr>
+                <tr>
+                    <td><input type="number" class="form-control" name="editYear" placeholder="Year" required></td>
+                </tr>
+                <tr>
+                    <td><input type="text" class="form-control" name="editAuthor" placeholder="Author" required></td>
+                </tr>
+                <tr>
+                    <td><input type="text" class="form-control" name="editPublisher" placeholder="Publisher" required></td>
+                </tr>
+                <tr>
+                    <td>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="editStatus" id="editStatusCheckbox">
+                        <label class="form-check-label" for="editStatusCheckbox">Borrowed</label>
+                    </div>
+                    </td>
+                </tr>
+                <tr id="editBorrowedByRow" style="display: none;"> <!-- Updated ID attribute -->
+                    <td><input type="text" class="form-control" name="editBorrowedBy" id="editBorrowedBy" placeholder="Borrowed By"></td>
+                </tr>
+                <tr>
+                    <td><button type="submit" class="btn btn-primary">Update</button></td>
+                </tr>
+              </tbody>
+            </table>
+            </div>
+        </div>
+        </form>
+    </div>
+  
+    </div>
+</div>  
+
+
+
+  
+
+  
+<script src="scripts.js"></script>
+<!-- Bootstrap JS and Popper.js -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

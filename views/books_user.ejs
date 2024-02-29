@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Books</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">Book List</a>
+    <!-- Add any navigation links if needed -->
+  </div>
+  <div class="collapse navbar-collapse" id="navbarNav">
+    <ul class="navbar-nav">
+      <li class="nav-item">
+        <a class="nav-link active" href="index.html">Home</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="user_usr.html">Go Back</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="index.html">Sign Out</a>
+      </li>
+      
+    </ul>
+  </div>
+</nav>
+
+<div class="container mt-5">
+  <h2>Book List</h2>
+  <div class="row">
+    <div class="col-md-12">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Year</th>
+            <th>Author</th>
+            <th>Publisher</th>
+            <th>Status</th>
+            <th>Borrowed By</th>
+            <th>Action</th> <!-- Add a new column for actions -->
+          </tr>
+        </thead>
+        <tbody>
+          <% books.forEach((book, index) => { %>
+            <tr>
+              <td><%= index + 1 %></td> <!-- Display PostgreSQL's own ID counting -->
+              <td><%= book.name %></td>
+              <td><%= book.year %></td>
+              <td><%= book.author %></td>
+              <td><%= book.publisher %></td>
+              <td><%= book.status ? 'Borrowed' : 'Available' %></td>
+              <td><%= book.borrowed_by || 'N/A' %></td>
+              <td>
+                <!-- Add the "Borrow" button with appropriate data attributes -->
+                <% if (!book.status) { %>
+                  <button class="btn btn-success borrowButton" data-id="<%= book.id %>">Borrow </button>
+                <% } else { %>
+                  <button class="btn btn-warning unborrowButton" data-id="<%= book.id %>">Unborrow</button>
+                <% } %>
+                <button class="btn btn-primary viewCommentsButton" data-id="<%= book.id %>" data-bs-toggle="modal" data-bs-target="#commentsModal">View Comments</button>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="commentsModal" tabindex="-1" aria-labelledby="commentsModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="commentsModalLabel">Comments</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <!-- Display comments here -->
+        <ul class="list-group" id="commentsList"></ul>
+      </div>
+      <div class="modal-footer">
+        <!-- Form to add a new comment -->
+        <form id="addCommentForm">
+          <div class="mb-3">
+            <textarea class="form-control" id="commentText" rows="3" placeholder="Add a comment"></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary">Add Comment</button>
+        </form>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script >
+  document.querySelectorAll('.viewCommentsButton').forEach(button => {
+    button.addEventListener('click', async () => {
+      const bookId = button.getAttribute('data-id');
+      try {
+        // Fetch comments for the specific book
+        const response = await fetch(`/books/${bookId}/comments`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch comments');
+        }
+        const comments = await response.json();
+        
+        // Clear previous comments
+        const commentsList = document.getElementById('commentsList');
+        commentsList.innerHTML = '';
+        
+        // Populate modal with fetched comments
+        comments.forEach(comment => {
+            const li = document.createElement('li');
+            li.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-center');
+            li.innerHTML = `
+            <span><strong>${comment.username}:</strong> ${comment.comment}</span>
+            <button type="button" class="btn btn-danger btn-sm delete-comment" data-comment-id="${comment.comment_id}">Delete</button>
+            `;
+            commentsList.appendChild(li);
+  
+            // Add event listener to delete button
+            const deleteButton = li.querySelector('.delete-comment');
+            deleteButton.addEventListener('click', async () => {
+              const commentId = deleteButton.getAttribute('data-comment-id');
+              console.log(commentId);
+              try {
+                // Delete the comment
+                const deleteResponse = await fetch(`/books/${bookId}/comments/${commentId}`, {
+                  method: 'DELETE'
+                });
+                if (!deleteResponse.ok) {
+                  throw new Error('Failed to delete comment');
+                }
+                // Remove the comment from the UI
+                li.remove();
+              } catch (error) {
+                console.error('Error deleting comment:', error);
+              }
+            });
+        });
+  
+      } catch (error) {
+        console.error('Error fetching comments:', error);
+      }
+    });
+  });
+
+
+document.getElementById('addCommentForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    // Fetch user info
+    try {
+        const userInfoResponse = await fetch('/user_info');
+        if (!userInfoResponse.ok) {
+            throw new Error('Failed to fetch user info');
+        }
+        const userInfo = await userInfoResponse.json();
+        const userId = userInfo.userID;
+        const username = userInfo.username;
+
+        // Proceed with adding the comment
+        const bookId = document.querySelector('.viewCommentsButton').getAttribute('data-id');
+        const comment = document.getElementById('commentText').value;
+
+        const commentPayload = {
+            userId: userId,
+            username: username,
+            comment: comment
+        };
+        console.log(commentPayload);
+
+        try {
+            const response = await fetch(`/books/${bookId}/comments`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(commentPayload)
+            });
+            if (response.ok) {
+                // Reload comments after adding a new one
+                document.querySelector('.viewCommentsButton[data-id="' + bookId + '"]').click();
+                document.getElementById('commentText').value = ''; // Clear the input field
+            } else {
+                console.error('Failed to add comment');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    }
+});
+
+document.querySelectorAll('.borrowButton').forEach(button => {
+  button.addEventListener('click', async () => {
+    console.log('Borrow button found:', button);
+    const bookId = button.getAttribute('data-id');
+    try {
+        const response = await fetch(`/books/borrow/${bookId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        if (response.ok) {
+            window.location.reload(); // Refresh page to show updated book list
+        } else {
+            console.error('Failed to borrow book');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    }
+});
+});
+
+  document.querySelectorAll('.unborrowButton').forEach(button => {
+  button.addEventListener('click', async () => {
+      const bookId = button.getAttribute('data-id');
+      try {
+          const response = await fetch(`/books/unborrow/${bookId}`, {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json'
+              }
+          });
+          if (response.ok) {
+              window.location.reload(); // Refresh page to show updated book list
+          } else {
+              console.error('Failed to unborrow book');
+          }
+      } catch (error) {
+          console.error('Error:', error);
+      }
+  });
+  });
+</script>
+<!-- Bootstrap JS and Popper.js -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

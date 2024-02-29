@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Information</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"  crossorigin="anonymous">
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <a class="navbar-brand" href="#">Your Website</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item active">
+                    <a class="nav-link" href="index.html">Home <span class="sr-only">(current)</span></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="index.html">Sign Out</a>
+                </li>
+                
+            </ul>
+        </div>
+    </nav>
+
+  <div class="container mt-5">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="card-title">User Information</h5>
+      </div>
+      <div class="card-body">
+        <div class="mb-3">
+          <p id="welcomeMessage">Welcome, Loading...</p> 
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container mt-5">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="card-title">Create a Text Post</h5>
+      </div>
+      <div class="card-body">
+        <div id="userPostsContainer"></div>
+        <form id="createPostForm">
+          <div class="mb-3">
+            <label for="postContent" class="form-label">Write your post:</label>
+            <textarea class="form-control" id="postContent" name="postContent" rows="3" required></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary">Post</button>
+        </form>
+        <div id="postMessage" class="mt-3"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container mt-5">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="card-title">Change Password</h5>
+      </div>
+      <div class="card-body">
+        <form id="changePasswordForm">
+          <div class="mb-3">
+            <label for="oldPassword" class="form-label">Old Password</label>
+            <input type="password" class="form-control" id="oldPassword" name="oldPassword" required>
+          </div>
+          <div class="mb-3">
+            <label for="newPassword" class="form-label">New Password</label>
+            <input type="password" class="form-control" id="newPassword" name="newPassword" required>
+          </div>
+          <button type="submit" class="btn btn-primary">Change Password</button>
+        </form>
+        <div id="changePasswordMessage" class="mt-3"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container mt-5">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="card-title">Borrowed Books</h5>
+      </div>
+      <div class="card-body">
+        <ul id="borrowedBooksList" class="list-group">
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="container mt-3">
+    <h2>Navigation</h2>
+    <div class="row">
+      <div class="col-md-6">
+        <a href="/books_user" class="btn btn-success">Go to Library</a>
+      </div>
+    </div>
+  </div>
+
+  
+  <script>
+    // Fetch the user's posts from the server
+    fetch('/user_posts')
+      .then(response => response.json())
+      .then(posts => {
+        // Get the container where the posts will be displayed
+        const postContainer = document.getElementById('userPostsContainer');
+  
+        // Clear any existing posts
+        postContainer.innerHTML = '';
+  
+        // Iterate over the fetched posts and create HTML elements to display them
+        posts.forEach(post => {
+          const postElement = document.createElement('div');
+          postElement.classList.add('card', 'mb-3');
+          postElement.innerHTML = `
+            <div class="card-body">
+              <p class="card-text">${post.content}</p>
+              <p class="card-text"><small class="text-muted">Created at ${new Date(post.created_at).toLocaleString()}</small></p>
+              <button class="btn btn-danger delete-post" data-post-id="${post.id}">Delete</button>
+            </div>
+          `;
+          postContainer.appendChild(postElement);
+        });
+  
+        // Add event listeners to delete post buttons
+        const deleteButtons = document.querySelectorAll('.delete-post');
+        deleteButtons.forEach(button => {
+          button.addEventListener('click', function() {
+            const postId = button.dataset.postId;
+            fetch(`/delete_post/${postId}`, {
+              method: 'DELETE'
+            })
+            .then(response => response.json())
+            .then(data => {
+              // Refresh the posts after deletion
+              fetchPosts();
+            })
+            .catch(error => {
+              console.error('Error:', error);
+            });
+          });
+        });
+      })
+      .catch(error => {
+        console.error('Error fetching user posts:', error);
+      });
+  
+    // Function to fetch user posts
+    function fetchPosts() {
+      fetch('/user_posts')
+        .then(response => response.json())
+        .then(posts => {
+          const postContainer = document.getElementById('userPostsContainer');
+          postContainer.innerHTML = '';
+  
+          posts.forEach(post => {
+            const postElement = document.createElement('div');
+            postElement.classList.add('card', 'mb-3');
+            postElement.innerHTML = `
+              <div class="card-body">
+                <p class="card-text">${post.content}</p>
+                <p class="card-text"><small class="text-muted">Created at ${new Date(post.created_at).toLocaleString()}</small></p>
+                <button class="btn btn-danger delete-post" data-post-id="${post.id}">Delete</button>
+              </div>
+            `;
+            postContainer.appendChild(postElement);
+          });
+  
+          // Re-add event listeners to delete post buttons
+          const deleteButtons = document.querySelectorAll('.delete-post');
+          deleteButtons.forEach(button => {
+            button.addEventListener('click', function() {
+              const postId = button.dataset.postId;
+              fetch(`/delete_post/${postId}`, {
+                method: 'DELETE'
+              })
+              .then(response => response.json())
+              .then(data => {
+                fetchPosts(); // Refresh the posts after deletion
+              })
+              .catch(error => {
+                console.error('Error:', error);
+              });
+            });
+          });
+        })
+        .catch(error => {
+          console.error('Error fetching user posts:', error);
+        });
+    }
+  
+    // Fetch user name
+    fetch('/user_name')
+      .then(response => response.json())
+      .then(data => {
+        // Update the HTML content with the fetched username
+        document.getElementById('welcomeMessage').textContent = 'Welcome, ' + data.username + '!';
+      })
+      .catch(error => {
+        console.error('Error:', error);
+      });
+  
+    // Add event listener to create post form
+    document.getElementById('createPostForm').addEventListener('submit', function(event) {
+      event.preventDefault(); // Prevent the form from submitting traditionally
+  
+      const postContent = document.getElementById('postContent').value;
+  
+      fetch('/create_post', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ content: postContent })
+      })
+      .then(response => response.json())
+      .then(data => {
+        // Display the response message
+        const postMessage = document.getElementById('postMessage');
+        postMessage.textContent = 'Post created successfully.';
+        postMessage.classList.add('text-success');
+        postMessage.classList.remove('text-danger');
+        fetchPosts(); // Refresh the posts after creating a new one
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        // Display the error message
+        const postMessage = document.getElementById('postMessage');
+        postMessage.textContent = 'An error occurred while creating the post.';
+        postMessage.classList.add('text-danger');
+        postMessage.classList.remove('text-success');
+      });
+    });
+  
+    // Add event listener to change password form
+    document.getElementById('changePasswordForm').addEventListener('submit', function(event) {
+      event.preventDefault(); // Prevent the form from submitting traditionally
+  
+      // Fetch input values
+      const oldPassword = document.getElementById('oldPassword').value;
+      const newPassword = document.getElementById('newPassword').value;
+  
+      // Send a POST request to the server to change the password
+      fetch('/change-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ oldPassword, newPassword })
+      })
+      .then(response => response.json())
+      .then(data => {
+        // Display the response message
+        document.getElementById('changePasswordMessage').textContent = data.message;
+      })
+      .catch(error => {
+        console.error('Error:', error);
+      });
+    });
+  
+    // Fetch borrowed books
+    fetch('/borrowed-books')
+      .then(response => response.json())
+      .then(borrowedBooks => {
+        const borrowedBooksList = document.getElementById('borrowedBooksList');
+        borrowedBooks.forEach(book => {
+          const listItem = document.createElement('li');
+          listItem.classList.add('list-group-item');
+          listItem.textContent = `${book.name} by ${book.author}`;
+          borrowedBooksList.appendChild(listItem);
+        });
+      })
+      .catch(error => {
+        console.error('Error:', error);
+      });
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" ></script>
+
+</body>
+</html>
